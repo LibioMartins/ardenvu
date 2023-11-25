@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Ardenvul friends</title>
+  <style>
+    body{
+      background-color:black;
+    }
+    #login{
+      background-color: lightslategray;
+      width: 20vw;
+      height: 15vh;
+      border-radius: 10px;
+      text-align: center;
+      font-family: Helvetica, sans-serif;
+      font-size: 3vh;
+      color: white;
+      margin-left: 40vw;
+      margin-top: 40vh;
+    }
+    #textLogin{
+      height: 5vh;
+      width: 15vw;
+      margin-top: -10vh;
+      font-size: 5vh;
+    }
+    #main{
+      display: none;
+    }
+    #canvas {
+      background-image:url("background1.png");
+      user-select: none;
+      transform-origin: top left;
+    }
+  
+    #canvasBox{
+      position: absolute;
+      top: 0;
+      left: 0;
+      width:100vw;
+      height: 100vh;
+      overflow-y:hidden;
+      overflow-x:hidden;
+      z-index: 1;
+      
+    }
+    #tool-box{
+      background-color: lightslategray;
+      min-width: 400px;
+      min-height: 40px;
+      max-width: 1400px;
+      max-height: 160px;
+      width: 25vw;
+      height: 4vw;
+      border-radius:2vh;
+      z-index: 2; 
+      align-items: center;
+    }
+    #tool-box select{
+      width: 3.5vw;
+      height: 2.5vw;
+      min-width: 40px;
+      min-height: 40px;
+      margin-top: 2vh;
+      font-size: 3.5vh;
+      font-family: 'Times New Roman', Times, serif;
+    }
+    #textInput{
+      background-color: #1E2231;
+      border: 2px solid white;
+      border-radius: 3px;
+    }
+    .btn2{
+      margin-top: 0vh;
+      min-width: 50px;
+      min-height: 20px;
+      font-size: 2vw;
+      user-select: none;
+      background-color: white;
+    }
+    .btn{
+      width: 3vw;
+      height: 2vw;
+      min-width: 30px;
+      min-height: 20px;
+      max-width: 100px;
+      margin-top: 2vh;
+      font-size: 2vh;
+      user-select: none;
+      background-color: rgba(255, 0, 0, 0.529);
+      color: white;
+    }
+    #tools{
+      margin-left: 2vh;
+    }
+  
+    #users{
+      background-color: lightslategray;
+      min-width: 100px;
+      width: 10vw;
+      border-radius: 10px;
+      z-index: 2;
+      text-align: center;
+      font-size: 1.5vw;
+      color: white;
+      margin-right: none;
+    }
+    #users p{
+      margin: 1vh;
+    }
+    #usersList p{
+      font-size: 2.5vh;
+      font-family: Arial, Helvetica, sans-serif;
+      margin: 0vh;
+    }
+  </style>
+</head>
+<body>
+ <div id="login">
+  <h2>Digite seu nome:</h2>
+  <input type="text" id="textLogin" maxlength="12">
+ </div>
+ <div id="main">
+  <div id="tool-box" style="position: relative;">
+    <select id="tools">
+        <option value="move">&#128400;</option>
+        <option value="line">&#x270E;</option>
+        <option value="rubber">&#10000;</option>
+        <option value="text">T.</option>  
+    </select>
+    <select id="cores" onchange="background()">
+      <option value="white" style="background-color: white;"></option>
+      <option value="DarkGray" style="background-color: DarkGray;"></option>
+      <option value="Black" style="background-color: black;"></option>
+      <option value="SlateBlue" style="background-color:SlateBlue;"></option>
+      <option value="DeepSkyBlue" style="background-color: DeepSkyBlue;"></option>
+      <option value="Cyan" style="background-color: Cyan"></option>
+      <option value="Blue" style="background-color: blue;"></option>
+      <option value="lime" style="background-color: lime;"></option>
+      <option value="SaddleBrown" style="background-color: SaddleBrown;"></option>
+      <option value="Purple" style="background-color: Purple;"></option>
+      <option value="DeepPink" style="background-color:DeepPink;"></option>
+      <option value="Red" style="background-color: Red;"></option>
+      <option value="Orange" style="background-color: Orange;"></option>
+      <option value="Yellow" style="background-color: Yellow;"></option>
+    </select>
+    <select id="drawWidth">
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="4">4</option>
+      <option value="7">7</option>
+      <option value="10">10</option>
+      <option value="13">13</option>
+      <option value="16">16</option>
+      <option value="20">20</option>
+    </select>
+    <button class="btn" id="snap-button">snap</button>
+    <button class="btn2" id="inputImage">📷︎</button>
+   
+  </div>
+  <div id="users" style="position: relative;" >
+   <p>Online:</p>
+   <div id="usersList"></div>
+  </div>
+  <div id="canvasBox">
+    <canvas id="canvas" width="8000" height="6000" onmousedown="mousedown()"  onmouseup="mouseup()"  onmouseenter="mouseenter()" onmousemove="mousemove()" ontouchstart="touchstart(event)" ontouchmove="touchmove(event)" ontouchend="touchend(event)"></canvas>
+
+  </div>
+ </div>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    var initposX;
+    var initposY;
+    var initposX;
+    var initposY;
+    var snap=-1;
+    var snapvalx;
+    var snapvaly;
+    var snapvalx2;
+    var snapvaly2;
+    var x;
+    var y;
+    var scale = 1;
+
+    
+    document.addEventListener("keydown", function(event) {
+      if (event.key === "Enter" && document.getElementById("login")) {
+        var user=document.getElementById("textLogin").value
+        if(user===""){
+          user="Retainer"
+        }
+        document.getElementById("login").style.display="none"
+        document.getElementById("main").style.display="block"
+        var login=document.getElementById("login");
+         login.remove();
+        socket.emit("login", { username: user });
+        
+      }
+    });
+
+    function handleScroll(event) {
+      if (event.deltaY < 0) {   
+        scale += 0.1; 
+        if(scale>3){
+          scale=3
+        }
+        canvas.style.transform = "scale(" + scale + ")";
+      }
+      if (event.deltaY > 0) {
+        scale -= 0.1; 
+        if(scale<0.1){
+          scale=0.1
+        }
+        canvas.style.transform = "scale(" + scale + ")";
+      }
+    }
+    window.addEventListener('wheel', handleScroll);
+
+    const inputImage = document.getElementById("inputImage");
+    inputImage.addEventListener("click", () => {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*";
+      input.onchange = handleImageUpload;
+      input.click();
+    });
+
+    function handleImageUpload(event) {
+          const file = event.target.files[0];
+
+        if (file) {
+            const reader = new FileReader();
+
+            reader.onload = function (event) {
+                const img = new Image();
+                img.onload = function () {
+                    context.drawImage(img, 0, 0, img.width, img.height);
+                    // Envia a imagem para o servidor
+                    socket.emit('image', { dataURL: canvas.toDataURL() });
+                };
+                img.src = event.target.result;
+            };
+
+            reader.readAsDataURL(file);
+        }
+    }
+    
+
+    function background(){
+      document.getElementById("cores").style.backgroundColor= document.getElementById("cores").value
+    }
+    function mouseenter(){
+      if(document.getElementById("tools").value==='line' || document.getElementById("tools").value==='rubber'){
+      document.getElementById("canvas").style.cursor="crosshair"
+      }
+      if(document.getElementById("tools").value==='move'){
+      document.getElementById("canvas").style.cursor="grab"
+      }
+      if(document.getElementById("tools").value==='pointer'){
+      document.getElementById("canvas").style.cursor="pointer"
+      }
+      if(document.getElementById("tools").value==='text'){
+      document.getElementById("canvas").style.cursor="text"
+      }
+    }
+    function touchend() {
+      event.preventDefault()
+      drawing = false;
+    }
+    function mouseup(){
+      if(document.getElementById("tools").value==='move'){
+      document.getElementById("canvas").style.cursor="grab"
+      }
+    }
+    function touchstart(event) {
+      event.preventDefault();
+      if (snap > 0) {
+        snapvalx = Math.round((event.touches[0].clientX / scale) / 50) * 50;
+        snapvaly = Math.round((event.touches[0].clientY / scale) / 50) * 50;
+      } else {
+        snapvalx = event.touches[0].clientX / scale;
+        snapvaly = event.touches[0].clientY / scale;
+      }
+      initposX = snapvalx + document.getElementById("canvasBox").scrollLeft / scale;
+      initposY = snapvaly + document.getElementById("canvasBox").scrollTop / scale;
+
+
+      //start draw 
+      event.preventDefault()
+      drawing = true;
+      var scrollX=document.getElementById("canvasBox").scrollLeft/scale;
+      var scrollY=document.getElementById("canvasBox").scrollTop/scale;
+
+      lastX = snapvalx + scrollX //|| event.touches[0].clientX - canvasRect.left + scrollX;
+      lastY = snapvaly + scrollY //|| event.touches[0].clientY - canvasRect.top + scrollY;
+    }
+    function mousedown(){
+      if(snap>0){
+        if(event.clientX){
+          snapvalx=Math.round((event.clientX/scale)/50)*50;
+          snapvaly=Math.round((event.clientY/scale)/50)*50;
+        }
+      }else{
+        if(event.clientX){
+          snapvalx=event.clientX/scale
+          snapvaly=event.clientY/scale
+        }
+      }
+      initposX=snapvalx + document.getElementById("canvasBox").scrollLeft/scale
+      initposY=snapvaly + document.getElementById("canvasBox").scrollTop/scale
+      if(document.getElementById("tools").value==='move'){
+      document.getElementById("canvas").style.cursor="grabbing"
+      }
+      if(document.getElementById("tools").value==='text'){
+        var input = document.createElement('input');
+        input.type = 'text';
+        input.style.position = 'fixed';
+        input.style.zIndex='2';
+        input.style.left = event.clientX + 'px';
+        input.style.top = event.clientY + 'px';
+        if(event.clientX){
+          x=(event.clientX)/scale +document.getElementById("canvasBox").scrollLeft/scale;
+          y=(event.clientY)/scale +document.getElementById("canvasBox").scrollTop/scale;
+        }
+        input.id="textInput";
+        input.style.color=document.getElementById('cores').value
+        input.onkeydown = handleEnter;
+
+        document.body.appendChild(input);
+
+        hasInput = true;
+      }
+    }
+    function handleEnter(e) {
+    var keyCode = e.keyCode;
+    if (keyCode === 13) {
+        var textVal=document.getElementById("textInput").value;
+        var color = document.getElementById('cores').value
+        // Enviar os dados de texto para o servidor
+        socket.emit('text', {
+          color: document.getElementById('cores').value, 
+          text: textVal, 
+          x: x, 
+          y: y 
+          });
+        document.body.removeChild(this);
+        hasInput = false;
+    }
+    }
+    function touchmove(event) {
+      event.preventDefault();
+      if (snap > 0) {
+        snapvalx = Math.round((event.touches[0].clientX / scale) / 50) * 50;
+        snapvaly = Math.round((event.touches[0].clientY / scale) / 50) * 50;
+      } else {
+        snapvalx = event.touches[0].clientX / scale;
+        snapvaly = event.touches[0].clientY / scale;
+      }
+      if (document.getElementById("tools").value === 'move') {
+        document.getElementById("canvasBox").scrollLeft = (initposX - snapvalx) * scale;
+        document.getElementById("canvasBox").scrollTop = (initposY - snapvaly) * scale;
+      }
+      if(document.getElementById("tools").value === 'line' || document.getElementById("tools").value ==='rubber'){
+      event.preventDefault()
+      if (!drawing) return;
+      var scrollX=document.getElementById("canvasBox").scrollLeft/scale;
+      var scrollY=document.getElementById("canvasBox").scrollTop/scale;
+
+      const currentX = snapvalx + scrollX 
+      const currentY = snapvaly + scrollY 
+      socket.emit('draw', {
+        startX: lastX,
+        startY: lastY,
+        endX: currentX,
+        endY: currentY,
+        color: document.getElementById('cores').value,
+        tool: document.getElementById('tools').value,
+        lineWidth: document.getElementById('drawWidth').value
+        
+      });
+
+      // Desenhar no canvas localmente
+      draw(lastX, lastY, currentX, currentY, document.getElementById('cores').value, document.getElementById('tools').value, document.getElementById('drawWidth').value);
+
+      // Atualizar as coordenadas do último ponto
+      lastX = currentX;
+      lastY = currentY;
+     }
+    }
+      
+    function mousemove(){
+        if(snap>0){
+        if(event.clientX){
+          snapvalx=Math.round((event.clientX/scale)/50)*50;
+          snapvaly=Math.round((event.clientY/scale)/50)*50;
+        } 
+        document.getElementById("canvasBox").scrollTop=Math.round(document.getElementById("canvasBox").scrollTop/50)*50;
+        document.getElementById("canvasBox").scrollLeft=Math.round(document.getElementById("canvasBox").scrollLeft/50)*50;
+      }else{
+        if(event.clientX){
+          snapvalx=event.clientX/scale
+          snapvaly=event.clientY/scale
+        } 
+      }
+      if(document.getElementById("canvas").style.cursor==="grabbing"){
+        event.preventDefault();
+        document.getElementById("canvasBox").scrollTop =  (-snapvaly +initposY)*scale
+        document.getElementById("canvasBox").scrollLeft =  (-snapvalx +initposX)*scale
+        
+      }
+    }
+    // Conectar ao servidor Socket.IO
+    const socket = io();
+
+    // Obter a referência para o elemento canvas
+    const canvas = document.getElementById('canvas');
+    const context = canvas.getContext('2d');
+
+    // Variáveis para armazenar as coordenadas do desenho
+    let drawing = false;
+    let canvasRect = canvas.getBoundingClientRect(); // Retângulo do canvas
+    let lastX = 0;
+    let lastY = 0;
+
+    // Evento de clique ou toque no canvas para iniciar o desenho
+    function startDrawing(event) {
+      event.preventDefault()
+      drawing = true;
+      var scrollX=document.getElementById("canvasBox").scrollLeft/scale;
+      var scrollY=document.getElementById("canvasBox").scrollTop/scale;
+
+      lastX = snapvalx + scrollX //|| event.touches[0].clientX - canvasRect.left + scrollX;
+      lastY = snapvaly + scrollY //|| event.touches[0].clientY - canvasRect.top + scrollY;
+    }
+
+    // Evento de movimento do mouse ou toque para desenhar
+    function drawEvent(event) {
+      event.preventDefault()
+      if (!drawing) return;
+      var scrollX=document.getElementById("canvasBox").scrollLeft/scale;
+      var scrollY=document.getElementById("canvasBox").scrollTop/scale;
+
+      const currentX = snapvalx + scrollX 
+      const currentY = snapvaly + scrollY 
+      // Enviar os dados de desenho para o servidor
+      socket.emit('draw', {
+        startX: lastX,
+        startY: lastY,
+        endX: currentX,
+        endY: currentY,
+        color: document.getElementById('cores').value,
+        tool: document.getElementById('tools').value,
+        lineWidth: document.getElementById('drawWidth').value
+      });
+
+      // Desenhar no canvas localmente
+      draw(lastX, lastY, currentX, currentY, document.getElementById('cores').value, document.getElementById('tools').value, document.getElementById('drawWidth').value);
+
+      // Atualizar as coordenadas do último ponto
+      lastX = currentX;
+      lastY = currentY;
+    }
+
+    // Evento de soltar o clique ou toque para parar o desenho
+    function stopDrawing() {
+      event.preventDefault()
+      drawing = false;
+    }
+
+    // Adicionar os eventos de mouse e toque ao canvas
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', drawEvent);
+    canvas.addEventListener('mouseup', stopDrawing);
+    
+    
+    const snapButton = document.getElementById('snap-button');
+    snapButton.addEventListener('click', () => {
+      snap=snap*-1
+      if(snap>0){
+        document.getElementById('snap-button').style.backgroundColor="rgba(0, 255, 0, 0.529)"
+      }else{
+        document.getElementById('snap-button').style.backgroundColor="rgba(255, 0, 0, 0.529)"
+      }
+    });
+
+    // Evento para receber os dados de desenho do servidor
+    socket.on('draw', (data) => {
+      draw(data.startX, data.startY, data.endX, data.endY, data.color, data.tool, data.lineWidth);
+    });
+  
+    // Evento para receber os dados de texto do servidor
+    socket.on('text', (data) => {
+      // Desenhar o texto recebido no canvas nas posições x e y
+      drawText(data.text, data.x, data.y);
+    });
+
+    socket.on('image', function (data) {
+        const img = new Image();
+        img.onload = function () {
+            context.drawImage(img, 0, 0, img.width, img.height);
+        };
+        img.src = data.dataURL;
+    });
+    socket.on('userList', (users) => {
+      // Limpar a lista de usuários online antes de adicionar os novos usuários
+      var usersList = document.getElementById('usersList');
+      usersList.innerHTML = '';
+
+      // Iterar sobre os usuários e adicionar cada um à lista
+      users.forEach((user) => {
+        var userON = document.createElement('p');
+        userON.textContent = user;
+        usersList.appendChild(userON);
+      });
+    });
+    // Função para desenhar no canvas
+    function draw(startX, startY, endX, endY, color, tool, lineWidth) {
+      if(tool==="line"){
+        context.lineWidth = lineWidth;
+        context.strokeStyle = color;
+        context.fillStyle = color;
+        context.beginPath();
+        context.moveTo(startX, startY);
+        context.lineTo(endX, endY);
+        context.stroke();
+        context.arc(startX, startY, (context.lineWidth)/2, 0, 2 * Math.PI);
+        context.fill();
+        context.arc(endX, endY, (context.lineWidth)/2, 0, 2 * Math.PI);
+        context.fill();
+        context.closePath();
+      }
+      if(tool==='rubber'){
+        context.clearRect(startX-5-context.lineWidth, startY-5-context.lineWidth,10+context.lineWidth, 10+context.lineWidth);
+      }
+    }
+    // Função para desenhar o texto no canvas nas posições x e y
+      function drawText(text, x, y,color) {
+      context.font = '20px Arial'; // Defina a fonte e o tamanho do texto
+      context.strokeStyle = color;
+      context.fillStyle = color; // Defina a cor do texto
+      context.fillText(text, x, y); // Desenhe o texto no canvas nas posições x e y
+    }
+
+   
+  </script>
+</body>
+</html>
